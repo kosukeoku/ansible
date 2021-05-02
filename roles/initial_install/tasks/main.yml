@@ -1,0 +1,25 @@
+---
+# tasks file for initial_install
+  - name: Make Work Directory
+    file:
+      path: /home/ec2-user
+      state: directory
+      owner: ec2-user
+      group: ec2-user
+      mode: 0755
+
+  - name: Install git gcc-c++ glibc-headers openssl-devel readline libyaml-devel readline-devel zlib zlib-devel
+    yum:
+      name:
+        - git
+        - gcc-c++
+        - glibc-headers
+        - openssl-devel
+        - readline
+        - libyaml-devel
+        - readline-devel
+        - zlib
+        - zlib-devel
+        - libffi-devel
+      state: present
+      lock_timeout: 100

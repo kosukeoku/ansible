@@ -1,0 +1,57 @@
+---
+#- name: Gem install unicorn
+#  shell: /bin/bash -lc "gem install unicorn"
+#  args:
+#    chdir: /var/www/app/rails
+
+#- name: bundle install
+#  shell: bash -lc "bundle install"
+#  args:
+#    chdir: /var/www/app/rails
+
+- name: mkdir tmp/pids tmp/sockets
+  file: 
+    owner: ec2-user
+    group: ec2-user
+    path: /var/www/app/rails/tmp/{{ item }}
+    state: directory
+  with_items: 
+    - pids
+    - sockets
+
+- name: unicorn.confを送る
+  template: 
+    src: /var/lib/jenkins/workspace/execute_ansible/roles/unicorn/template/unicorn.conf.j2
+    dest: /var/www/app/rails/config/unicorn.conf.rb
+    owner: ec2-user
+    group: ec2-user
+    
+- name: Gemfileにunicornがあるか確認する
+  shell: bash -lc "less Gemfile | grep unicorn"
+  register: unicorn_exist
+  args:
+    chdir: /var/www/app/rails
+  ignore_errors: yes
+
+- name: Gemfileにunicornを追加する
+  lineinfile:   
+    path: /var/www/app/rails/Gemfile
+    line: gem 'unicorn'
+  when: unicorn_exist is failed
+
+- name: bundle install
+  shell: bash -lc "source {{ home_path }}/.bash_profile && bundle install"
+  args:
+    chdir: /var/www/app/rails
+  #- name: /var/www/app/rails/log/unicorn.logの権限を変更
+  #  file:
+  #    owner: ec2-user
+  #    group: ec2-user
+  #    path: /var/www/app/rails/log/unicorn.log
+  #    state: file
+      
+- name: unicornを起動する
+  shell: bash -lc "source {{ home_path }}/.bash_profile && bundle exec unicorn_rails -c config/unicorn.conf.rb -D -E production"
+  args: 
+    chdir: /var/www/app/rails
+  ignore_errors: yes

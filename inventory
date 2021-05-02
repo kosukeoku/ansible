@@ -1,0 +1,4 @@
+[webservers]
+schedule-app-ec2-instance
+
+[webservers:vars]

@@ -1,0 +1,34 @@
+- name: インストール対象のバージョンのrubyがインストール済か確認
+  shell: bash -lc "source {{ home_path }}/.bash_profile && {{ rbenv_path }}/bin/rbenv versions | grep {{ ruby_version }}"
+  register: rbenv_check_install
+  changed_when: False
+  ignore_errors: yes
+
+  #- debug:
+  #    msg: "{{rbenv-check_install}}"  
+
+- name: 未インストールの場合rubyをインストール
+  shell: bash -lc "source {{ home_path }}/.bash_profile && {{ rbenv_path }}/bin/rbenv install {{ruby_version}}"
+  when: rbenv_check_install is failed
+  args:
+    creates: "{{ ruby_dir }}"
+
+- name: 既にインストール対象のバージョンのrubyがrbenv globalとして設定してあるか確認
+  shell: bash -lc "source {{ home_path }}/.bash_profile && {{ rbenv_path }}/bin/rbenv version | grep {{ ruby_version }}"
+  register: rbenv_check_default
+  ignore_errors: yes
+
+- name: もし、rbenv globalに設定されていなければ設定する
+  shell: bash -lc "source {{ home_path }}/.bash_profile && {{ rbenv_path }}/bin/rbenv global {{ ruby_version }}"
+  when: rbenv_check_default is failed
+
+- name: rbenv rehash
+  shell: bash -lc "source {{ home_path }}/.bash_profile && {{ rbenv_path }}/bin/rbenv rehash"
+  ignore_errors: yes
+
+
+
+
+
+
+

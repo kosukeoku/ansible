@@ -1,0 +1,34 @@
+upstream unicorn {
+   server unix:/var/www/app/rails/tmp/sockets/.unicorn.sock;
+ }
+ 
+ server {
+   listen 80;
+   server_name {{ ec2_ip }};
+ 
+   access_log /var/www/app/nginx_log/access.log;
+   error_log  /var/www/app/nginx_log/error.log;
+ 
+   root /var/www/app/react;
+   try_files $uri/index.html $uri.html $uri @unicorn;
+ 
+   error_page 404 /404.html;
+   location = /404.html {
+     root /var/www/app/error_page;
+     internal;
+   }
+ 
+   error_page 500 502 503 504 /500.html;
+   location = /500.html {
+     root /var/www/app/error_page;
+     internal;
+   }
+ 
+   location @unicorn {
+     proxy_set_header X-Real-IP $remote_addr;
+     proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+     proxy_set_header Host $http_host;
+     proxy_pass http://unicorn;
+     proxy_intercept_errors on;
+   }
+ }

@@ -1,0 +1,21 @@
+---
+# install mysqld
+- name:  レポジトリの登録
+  yum:
+    name: https://dev.mysql.com/get/mysql80-community-release-el7-3.noarch.rpm
+    state: present
+
+- name: mysqld のインストール
+  yum:
+    name: "{{ item }}"
+    enablerepo: mysql80-community
+    state: present
+  with_items:
+    - mysql-community-server
+    - mysql-community-devel
+
+- name: mysqld 起動・自動起動設定
+  service:
+    name=mysqld
+    state=started
+    enabled=yes

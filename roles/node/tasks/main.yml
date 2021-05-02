@@ -1,0 +1,61 @@
+---
+- name: nodeがインストール済か確認
+  shell: "source {{ home_path }}/.nvm/nvm.sh && node -v"
+  register: node_exists
+  changed_when: False
+  ignore_errors: yes
+
+- name: githubからnvmをクローンする
+  git:
+    repo: https://github.com/creationix/nvm.git 
+    dest: "{{ home_path }}/.nvm"
+  when: node_exists is failed
+
+- name: nvmの権限を変更する
+  file:
+    path: "{{ home_path }}/.nvm"
+    state: directory
+    group: ec2-user
+    owner: ec2-user
+
+- name: nvmへのパスを通す
+  shell: "source {{ home_path }}/.nvm/nvm.sh"
+  when: node_exists is failed
+  args:
+    executable: /bin/bash
+
+- name: 対象のバージョンのnodeがインストール済か確認
+  shell: "source {{ home_path }}/.nvm/nvm.sh && node -v | grep {{ node_version }}"
+  register: node_check_install
+  changed_when: False
+  ignore_errors: yes 
+
+- name: nvmコマンドへのパスを設定
+  blockinfile:
+    dest: "{{ home_path }}/.bash_profile"
+    create: yes
+    insertafter: EOF
+    marker: "# ANSIBLE MANAGED BLOCK for node"
+    content: |
+      if [[ -s ~/.nvm/nvm.sh ]] ; then
+              source ~/.nvm/nvm.sh ;
+      fi
+  when: node_check_install is failed
+
+  #- name: nvmコマンドへのパスを設定
+  #  blockinfile:
+  #    dest: /etc/profile
+  #    create: yes
+  #    insertafter: EOF
+  #    marker: "# nvm path"
+  #    content: |
+  #      if [[ -s ~/.nvm/nvm.sh ]] ; then
+  #              source ~/.nvm/nvm.sh ;
+  #      fi
+  #  when: node_check_install is failed
+
+- name: Install node and set version
+  shell: "source {{ home_path }}/.nvm/nvm.sh && nvm install {{ node_version }}" 
+  args:
+    executable: /bin/bash
+  when: node_check_install is failed

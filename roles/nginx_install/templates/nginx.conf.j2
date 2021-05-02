@@ -1,0 +1,29 @@
+ # nginxのworkerプロセスの実行権限のユーザ
+ # 初期値はnginx
+ #user nginx;
+ 
+ # nginxのworkerプロセスの数
+ # 通常はCPUのコア数以下に設定する。
+ worker_processes 1;
+ 
+ # masterプロセスのプロセスID保存先
+ pid "/var/run/nginx.pid";
+ 
+ events {
+  # 最大コネクション数
+  # 1つのworkerプロセスが同時に処理できる最大コネクション数を設定
+  # 初期値は512
+  worker_connections 2048;
+ }
+ 
+ http {
+  # MIMEタイプの設定
+  include /etc/nginx/mime.types;
+ 
+  # レスポンスのデフォルトのMIMEタイプ設定
+  # 初期値はtext/plain
+  #default_type  application/octet-stream;
+ 
+  # 外部設定ファイル読み込み
+  include /etc/nginx/conf.d/*.conf;
+ }

@@ -1,0 +1,145 @@
+---
+- name: install bundler
+  gem:
+    name: "bundler"
+    executable: "{{ rbenv_path }}/shims/gem"
+    user_install: no
+
+- name: ファイル(rails)を作成する
+  file:
+    path: /var/www/app/rails
+    state: directory
+    group: ec2-user
+    owner: ec2-user
+
+
+- name: ファイル(react)を作成する
+  file:
+    path: /var/www/app/react/tmp
+    state: directory
+    group: ec2-user
+    owner: ec2-user
+
+- name: railsアプリのgit clone
+  git:
+   repo: "http://{{ git_username }}:{{ git_password }}@github.com/kosukeoku/schedule-app-backend.git"
+   dest: /var/www/app/rails
+   version: "{{ git_branch }}"
+
+   #- name: Gemfile書き換え
+   #  replace:
+   #    path: /var/www/app/rails/Gemfile
+   #    regexp: ruby '3.0.0'
+   #    replace: ruby '2.7.1'
+   #
+   #- name: .ruby-version書き換え
+   #  replace:
+   #    path: /var/www/app/rails/.ruby-version
+   #    regexp: 3.0.0
+   #    replace: 2.7.1
+
+- name: chown -R  ec2-user rails
+  file:
+    path: /var/www/app/rails
+    group: ec2-user
+    owner: ec2-user
+    recurse: yes
+    state: directory
+    
+    #- name: bundle update
+    #  shell: bash -lc "bundle update"
+    #  args: 
+    #    chdir: /var/www/app/rails
+    #  ignore_errors: yes
+    #
+    #- name: bundle update
+    #  shell: bash -lc "bundle update"
+    #  args:
+    #    chdir: /var/www/app/rails
+    #  ignore_errors: yes
+
+- name: bundle install
+  shell: bash -lc "source {{ home_path }}/.bash_profile && bundle install"
+  args: 
+    chdir: /var/www/app/rails
+
+    #- name: database.ymlにRDSの情報を記入する
+    #  replace:
+    #    path: /var/www/app/rails/config/database.yml
+    #    regexp: username[\s\S]*?host.*
+    #    replace: |
+    #      username: admin
+    #        password: adminadmin
+    #        host: 
+   
+- name: 環境変数PATHにrbenvのパスを設定
+  blockinfile:
+    dest: "{{ home_path }}/.bash_profile"
+    create: yes
+    insertafter: EOF
+    marker: "# ANSIBLE MANAGED BLOCK for rds"
+    content: export RAILS_DB_HOST={{ db_host  }}
+
+- name: master.keyファイルを追加する
+  file:
+    path: /var/www/app/rails/config/master.key
+    state: touch
+
+- name: master.keyに情報を追加する    
+  replace:
+    path: /var/www/app/rails/config/master.key
+    regexp: .*
+    replace: "{{ masterkey }}"
+
+- name: rails db:create RAILS_ENV=production
+  shell: bash -lc "source {{ home_path }}/.bash_profile && bin/rails db:create RAILS_ENV=production"
+  args:
+    chdir: /var/www/app/rails
+
+- name: rails db:create RAILS_ENV=production
+  shell: bash -lc "source {{ home_path }}/.bash_profile && bin/rails db:migrate RAILS_ENV=production"
+  args:
+    chdir: /var/www/app/rails    
+        
+- name: reactアプリのgit clone
+  git:
+    repo: "http://{{ git_username }}:{{ git_password }}@github.com/kosukeoku/schedule-app-frontend.git"
+    dest: /var/www/app/react/tmp
+    version: "{{ git_branch }}"
+  ignore_errors: yes
+
+- name: chown -R  ec2-user tmp
+  file:
+    path: /var/www/app/react/tmp
+    group: ec2-user
+    owner: ec2-user
+    recurse: yes
+    state: directory
+
+    #- name: npm install
+    #  npm: 
+    #    path: /var/www/app/react/tmp
+    #  become: no
+
+- name: npm install
+  shell: bash -lc  "source {{ home_path }}/.nvm/nvm.sh && npm install"
+  args:
+    chdir:  /var/www/app/react/tmp  
+  become: no
+
+- name: .envにEC2＿IPを記入する
+  replace:
+    path: /var/www/app/react/tmp/.env
+    regexp: http.*
+    replace: "http://{{ ec2_ip }}"
+
+- name: npm run build
+  shell: bash -lc "source {{ home_path }}/.nvm/nvm.sh && npm run build"
+  args:
+    chdir: /var/www/app/react/tmp
+
+- name: mv build/* ..
+  shell: bash -lc "mv -f build/* .."
+  args:
+    chdir: /var/www/app/react/tmp 
+  ignore_errors: yes   

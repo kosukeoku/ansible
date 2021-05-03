@@ -45,33 +45,12 @@
     owner: ec2-user
     recurse: yes
     state: directory
-    
-    #- name: bundle update
-    #  shell: bash -lc "bundle update"
-    #  args: 
-    #    chdir: /var/www/app/rails
-    #  ignore_errors: yes
-    #
-    #- name: bundle update
-    #  shell: bash -lc "bundle update"
-    #  args:
-    #    chdir: /var/www/app/rails
-    #  ignore_errors: yes
 
 - name: bundle install
   shell: bash -lc "source {{ home_path }}/.bash_profile && bundle install"
   args: 
     chdir: /var/www/app/rails
 
-    #- name: database.ymlにRDSの情報を記入する
-    #  replace:
-    #    path: /var/www/app/rails/config/database.yml
-    #    regexp: username[\s\S]*?host.*
-    #    replace: |
-    #      username: admin
-    #        password: adminadmin
-    #        host: 
-   
 - name: 環境変数PATHにrbenvのパスを設定
   blockinfile:
     dest: "{{ home_path }}/.bash_profile"
@@ -115,11 +94,6 @@
     owner: ec2-user
     recurse: yes
     state: directory
-
-    #- name: npm install
-    #  npm: 
-    #    path: /var/www/app/react/tmp
-    #  become: no
 
 - name: npm install
   shell: bash -lc  "source {{ home_path }}/.nvm/nvm.sh && npm install"

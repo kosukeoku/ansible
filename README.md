@@ -23,13 +23,14 @@ sudo vim ~/.vault_pass
 #暗号化ファイルを作成
 sudo vim  private.yml
 ---private.yml---
-  git_username: 
-  git_password: 
-  db_username: 
-  db_password: 
-  db_host: 
-  ec2_ip: 
-  masterkey: 
+git_secretkey: <SHHの秘密鍵名>
+app_backend: <SSHでのバックエンドのリポジトリ>
+app_frontend: <SSHでのフロントエンドのリポジトリ>
+db_username: <RDS作成時のユーザー名>
+db_password: <RDS作成時のパスワード>
+db_host: <RDSのエンドポイント>
+ec2_ip: <デプロイするEC2のパブリックIP>
+masterkey: <Railsのcredentialを使用する際のマスターキー> 
 ------------------
 
 #private.ymlを暗号化する

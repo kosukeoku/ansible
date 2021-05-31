@@ -39,12 +39,3 @@ ansible-vault encrypt private.yml
 
 #環境構築を実行する
 ansible-playbook -i inbentory site.yml　
-
-#jenkinsで実行する場合、下を実行することでEC2のパブリックIP、RDSのエンドポイントをpribate.ymlに書き込んでくれる
- 
- EC2_IP=`aws ec2 describe-instances --filter "Name=tag:Name,Values=<schedule-app-ec2-instance>" "Name=instance-state-name,Values=running" --query "Reservations[].Instances[].[PublicIpAddress]" --output text`
- sed -i "s/\(HostName\)\(.*\)/\1\ $EC2_IP/" ~/.ssh/config
- sed -i "s/\(ec2_ip:\)\(.*\)/\1\ $EC2_IP/" /var/lib/jenkins/workspace/execute_ansible/private.yml
- RDS_ENDPOINT=`aws rds describe-db-instances --db-instance-identifier schedule-app-rds-instance --query "DBInstances[].[Endpoint.Address]" --output text`
- sed -i "s/\(db_host:\)\(.*\)/\1\ $RDS_ENDPOINT/" /var/lib/jenkins/workspace/execute_ansible/private.yml
-```

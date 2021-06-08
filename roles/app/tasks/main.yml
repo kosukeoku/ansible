@@ -67,25 +67,17 @@
     owner: ec2-user
     recurse: yes
     state: directory
-    
-    #- name: bundle update
-    #  shell: bash -lc "bundle update"
-    #  args: 
-    #    chdir: /var/www/app/rails
-    #  ignore_errors: yes
-    #
-    #- name: bundle update
-    #  shell: bash -lc "bundle update"
-    #  args:
-    #    chdir: /var/www/app/rails
-    #  ignore_errors: yes
 
 - name: bundle install
   shell: bash -lc "source {{ home_path }}/.bash_profile && bundle install"
   args: 
     chdir: /var/www/app/rails
+<<<<<<< HEAD
  
    
+=======
+
+>>>>>>> dff85985458dbdcf178633074860f7c04491191a
 - name: 環境変数PATHにrbenvのパスを設定
   blockinfile:
     dest: "{{ home_path }}/.bash_profile"
@@ -130,11 +122,6 @@
     owner: ec2-user
     recurse: yes
     state: directory
-
-    #- name: npm install
-    #  npm: 
-    #    path: /var/www/app/react/tmp
-    #  become: no
 
 - name: npm install
   shell: bash -lc  "source {{ home_path }}/.nvm/nvm.sh && npm install"

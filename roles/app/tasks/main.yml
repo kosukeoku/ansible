@@ -20,12 +20,34 @@
     group: ec2-user
     owner: ec2-user
 
-- name: railsアプリのgit clone
-  git:
-   repo: "http://{{ git_username }}:{{ git_password }}@github.com/kosukeoku/schedule-app-backend.git"
-   dest: /var/www/app/rails
-   version: "{{ git_branch }}"
+- name: 秘密鍵をデプロイ先にコピーする
+  copy:
+    src: "/home/ec2-user/.ssh/{{ git_secretkey }}"
+    dest: /home/ec2-user/.ssh/
 
+- name: 秘密鍵の権限を変更
+  file:
+    path: "/home/ec2-user/.ssh/{{ git_secretkey }}"
+    group: ec2-user
+    owner: ec2-user
+    mode: 0600
+
+- name: railsアプリをクローンする
+  git:
+    repo: "{{ app_backend }}"
+    dest: /var/www/app/rails
+    version: "{{ git_branch }}"
+    key_file: "/home/ec2-user/.ssh/{{ git_secretkey }}"
+    accept_hostkey: yes
+
+- name: reactアプリをクローンする
+  git:
+    repo: "{{ app_frontend }}"
+    dest: /var/www/app/react/tmp
+    version: "{{ git_branch }}"
+    key_file: "/home/ec2-user/.ssh/{{ git_secretkey }}"
+    accept_hostkey: yes
+    
    #- name: Gemfile書き換え
    #  replace:
    #    path: /var/www/app/rails/Gemfile
@@ -62,15 +84,7 @@
   shell: bash -lc "source {{ home_path }}/.bash_profile && bundle install"
   args: 
     chdir: /var/www/app/rails
-
-    #- name: database.ymlにRDSの情報を記入する
-    #  replace:
-    #    path: /var/www/app/rails/config/database.yml
-    #    regexp: username[\s\S]*?host.*
-    #    replace: |
-    #      username: admin
-    #        password: adminadmin
-    #        host: 
+ 
    
 - name: 環境変数PATHにrbenvのパスを設定
   blockinfile:
@@ -100,13 +114,14 @@
   shell: bash -lc "source {{ home_path }}/.bash_profile && bin/rails db:migrate RAILS_ENV=production"
   args:
     chdir: /var/www/app/rails    
-        
-- name: reactアプリのgit clone
+
+- name: reactアプリをクローンする
   git:
-    repo: "http://{{ git_username }}:{{ git_password }}@github.com/kosukeoku/schedule-app-frontend.git"
+    repo: "{{ app_frontend }}"
     dest: /var/www/app/react/tmp
     version: "{{ git_branch }}"
-  ignore_errors: yes
+    key_file: "/home/ec2-user/.ssh/{{ git_secretkey }}"
+    accept_hostkey: yes        
 
 - name: chown -R  ec2-user tmp
   file:

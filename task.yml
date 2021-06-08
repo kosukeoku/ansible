@@ -1,0 +1,15 @@
+- hosts: webservers
+  become: yes
+  vars_files:
+    - private.yml
+  vars:
+    home_path: "/home/ec2-user"
+    rbenv_path: "{{ home_path }}/.rbenv"
+    ruby_version: 2.7.3
+    ruby_dir: "{{ rbenv_path }}/versions/{{ ruby_version }}"
+    node_version: "v15.11.0"
+    ec2_ip: 3.112.173.45
+    git_branch: "main"
+  roles:
+    - git 
+

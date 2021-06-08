@@ -1,7 +1,36 @@
 ---
 # tasks file for git
-- name: Install git
-  yum: 
-    name: git
-    state: present
-    lock_time: 180
+#- name: Install git
+#   yum: 
+#    name: git
+#    state: present
+#    lock_time: 180
+
+- name: 秘密鍵をデプロイ先にコピーする
+  copy:
+    src: "/home/ec2-user/.ssh/{{ git_secretkey }}"
+    dest: /home/ec2-user/.ssh/
+
+- name: 秘密鍵の権限を変更
+  file:
+    path: "/home/ec2-user/.ssh/{{ git_secretkey }}"
+    group: ec2-user
+    owner: ec2-user
+    mode: 0600
+
+- name: railsアプリをクローンする
+  git:
+    repo: "{{ app_backend }}"
+    dest: /var/www/app/rails
+    version: "{{ git_branch }}"
+    key_file: "/home/ec2-user/.ssh/{{ git_secretkey }}"
+    accept_hostkey: yes
+
+- name: reactアプリをクローンする
+  git:
+    repo: "{{ app_frontend }}"
+    dest: /var/www/app/react/tmp
+    version: "{{ git_branch }}"
+    key_file: "/home/ec2-user/.ssh/{{ git_secretkey }}"
+    accept_hostkey: yes
+
